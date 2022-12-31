@@ -237,6 +237,7 @@ In the charts regarding precision and recall we can see that the light blue dot 
 
 
 ### Inference demo samples
+Coming soon....
 ![](gifs/animation.gif)
 ![](gifs/animation2.gif)
 ![](gifs/animation3.gif)
