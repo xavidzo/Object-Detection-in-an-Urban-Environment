@@ -141,20 +141,110 @@ python inference_video.py --labelmap_path label_map.pbtxt --model_path experimen
 ## Submission Template
 
 ### Project overview
-This section should contain a brief description of the project and what we are trying to achieve. Why is object detection such an important component of self driving car systems?
+In this project the goal is to perform 2D object detection by using a collection of images from the Waymo Open Dataset which contains labels for the classes 'Vehicle', 'Pedestrian', and 'Cyclist'. Moreover, we leverage the tensorflow object detection API for training a custom object detector that is based on a neural network pretrained on the coco dataset. In other words we are finetuning a given neural network, adapting its configuration and parameters to our needs in what could be considered as 'Transfer Learning'. Object detection is a crucial task in the field of Autonomous Driving since perception of the obstacles in the environment lets the car compute an optimal path planning in the next step to avoid such obstacles and thus drive collision-free.
 
 ### Set up
-This section should contain a brief description of the steps to follow to run the code for this repository.
+I decided to develop this project locally with Docker, so please refer to the section above for [local setup](#local-setup) to install the container.
+One diference to note is that inside the container instead of having `/home/workspace`, you should work on a directory named `/app/project/`, so all commands from the [Structure](#structure) and [Instructions](#instructions) sections should be adjusted accordingly if necessary.
 
+I did not download the dataset from the google cloud as suggested in the instructions, but I downloaded the dataset directly from the Udacity workspace where the splits 'train', 'val' and 'test' were already available.
+
+### Troubleshooting
+I experienced a major bug with the provided Dockerfile to build the container. For instance the keras version seems to incompatible with the default installed tensorflow, so the solution I found was to reinstall keras again with the correct version, `pip install keras==2.5.0rc0`
+
+It may be required to install the gpu package of tensorflow as well, `pip install tensorflow-gpu==2.5.0`
+
+Then I saw some error coming from numpy *"InvalidArgumentError: TypeError: 'numpy.float64' object cannot be interpreted as an integer"*, which I was able to solve as indicated in the last post of this [thread](https://github.com/tensorflow/models/issues/2961)
+
+Also, in case you see an error similar to *"tensorflow/stream_executor/cuda/cuda_driver.cc:328] failed call to cuInit: CUDA_ERROR_UNKNOWN: unknown error"*, please consider to turn off Secure Boot in the Bios menu of your computer so that tensorflow can have acces to your GPU device as suggested [here](https://stackoverflow.com/questions/67045622/tensorflow-stream-executor-cuda-cuda-driver-cc328-failed-call-to-cuinit-cuda)
+
+
+
+
+
+
+ 
 ### Dataset
 #### Dataset analysis
-This section should contain a quantitative and qualitative description of the dataset. It should include images, charts and other visualizations.
+Please find below some samples of the images available in the Waymo Open Dataset. We can observe that the data was recorded both in day and night time conditions, the former case being easier to distinguish objects than the latter with much darker images and shadows. Also we see some data was recorded under harsh weather like rain and wind which unfortunately produce artifacts and diminish the quality of the images. Some of these images have ground-truth bounding boxes for objects at a very far distance, at the resolution of 640x640 even impossible for the human eye to see clearly. Some images even do not have any labels as no traffic participant was there in that moment.
+| ![](figures/image1.png)  |  ![](figures/image2.png) |
+:-------------------------:|:-------------------------:
+| ![](figures/image3.png)  |  ![](figures/image4.png) |
+| ![](figures/image5.png)  |  ![](figures/image6.png) |
+| ![](figures/image7.png)  |  ![](figures/image8.png) |
+| ![](figures/image9.png)  |  ![](figures/image10.png) |
+| ![](figures/image11.png)  |  ![](figures/image12.png) |
+| ![](figures/image13.png)  |  ![](figures/image14.png) |
+| ![](figures/image15.png)  |  ![](figures/image16.png) |
+
+The following plots all display information from a subset of 20k images.
+With regards to the distribution of labels, we see that 'Vehicle' is by far the most represented class in the dataset, 'Pedestrian' class is less than a third of 'Vehicle', and 'Cyclist' is the rarest type of label by several orders of magnitude less represented.
+
+![](figures/plot1.png) 
+
+In the next plot we can determine that most images have either between 5 and 20, or more than 20 bounding boxes per image, only 1/4 (of 20k images) have less than 5 boxes annotated.
+
+![](figures/plot2.png) 
+
+As illustrated below, most bounding boxes have a size between 100 and 1000 pixels, i.e. medium size, compared and relative to this amount, almost a half have a size less than 100 (small size) and only very few boxes have an area of more than 1000 pixels (big size).
+
+![](figures/plot3.png) 
+
+The following plot which displays how often multiple instances of a certain class appear on all images, basically confirms again that the likelihood of finding vehicles on an image is a lot bigger than finding pedestrians, and in turn cyclists. Therefore, one conclusion we can get from the figure is that the distribution of ground-truth labels is very unbalanced and this will lead to a poor detection of cyclists.
+![](figures/plot4.png)
+
 #### Cross validation
-This section should detail the cross validation strategy and justify your approach.
+As already mentioned, I used the dataset that was already present in the Udacity workspace that was splitted into 87% training, 10% validation and 3% testing from 99 .tfrecords. The fact that the files have been randomly suffled and the proportion of the splits give us confidence to have diverse and equally representative enough data for training and validation. The validation subset also helps us to spot and avoid to reach some potential overfitting when training the neural network.
 
 ### Training
 #### Reference experiment
-This section should detail the results of the reference experiment. It should includes training metrics and a detailed explanation of the algorithm's performances.
+The configuration file of my reference experiment is located in the folder `experiments/ref`. I used the default horizontal flip and random crop image data augmentations, and as a learning rate base I set 0.03 with a warmup lr of 0.01
+The network was trained for 3000 steps. The orange curve Loss/total_loss  and the blue dots in the different charts of Detection_Boxes_Precision/Recall are important metrics to find out how well the network was trained and its ability to yield good predictions. It seems the validation loss (blue dot) with value 6.3 at step 2k is slightly bigger than the training loss 6.522 also at 2k. This is an early indication of overfitting, and encourages us to try new ideas for better results than the baseline.
+![](figures/ref_loss.png)
+![](figures/ref_precision.png)
+![](figures/ref_recall.png)
+
+
+
+
+
+
 
 #### Improve on the reference
-This section should highlight the different strategies you adopted to improve your model. It should contain relevant figures and details of your findings.
+The configuration file of 'experiment1' is located in the folder `experiments/exp1`. In order to increase the variability of the training data and help object detector to genealize to new unseen data, I decided to apply additional data augmentation strategies such as random rgb to gray conversion, and modification of properites like saturation, brightness and contrast. Example of images altered by the techniques of data augmentation can be observed below.
+
+ ![](figures/dataug1.png)
+![](figures/dataug2.png)
+![](figures/dataug3.png)
+![](figures/dataug4.png)
+![](figures/dataug5.png)
+![](figures/dataug6.png)
+![](figures/dataug6.png)
+![](figures/dataug7.png)
+![](figures/dataug8.png)
+
+
+This time I changed also the learning rate base and warmup lr to be 2 orders of magnitude lower than before for a more optimal convergence of the loss function, 3e-4 and 1e-4 respectively (vs 3e-2 and 1e-2 as in the reference trial). The network was also trained for 3000 steps.
+
+In the plot of the loss it is very clear that in the red curve (exp1) is always lower than the orange curve (ref). The light blue dot loss (exp1) at step 2k is also lower than the dark blue dot (ref). This means that in this new experiment the network was doing much better against the training data, and was generalizing better as well in the validation set as compared to the case of the reference baseline.
+
+![](figures/exp1vsref_loss.png)
+
+In the charts regarding precision and recall we can see that the light blue dot (exp1) is always above the dark blue dot (ref), confirming again the success of the new experiment being able to improve all performance metrics of the baseline.
+![](figures/exp1vsref_precision.png)
+
+![](figures/exp1vsref_recall.png)
+
+
+### Inference demo samples
+![](gifs/animation.gif)
+![](gifs/animation2.gif)
+![](gifs/animation3.gif)
+
+
+
+
+
+
+
+
