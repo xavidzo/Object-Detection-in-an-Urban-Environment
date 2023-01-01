@@ -150,7 +150,7 @@ One diference to note is that inside the container instead of having `/home/work
 I did not download the dataset from the google cloud as suggested in the instructions, but I downloaded the dataset directly from the Udacity workspace where the splits 'train', 'val' and 'test' were already available.
 
 ### Troubleshooting
-I experienced a major bug with the provided Dockerfile to build the container. For instance the keras version seems to incompatible with the default installed tensorflow, so the solution I found was to reinstall keras again with the correct version, `pip install keras==2.5.0rc0`
+I experienced a major bug with the provided Dockerfile to build the container. For instance the keras version seems to be incompatible with the default installed tensorflow, so the solution I found was to reinstall keras again with the correct version, `pip install keras==2.5.0rc0`
 
 It may be required to install the gpu package of tensorflow as well, `pip install tensorflow-gpu==2.5.0`
 
@@ -194,12 +194,12 @@ The following plot which displays how often multiple instances of a certain clas
 ![](figures/plot4.png)
 
 #### Cross validation
-As already mentioned, I used the dataset that was already present in the Udacity workspace that was splitted into 87% training, 10% validation and 3% testing from 99 .tfrecords. The fact that the files have been randomly suffled and the proportion of the splits give us confidence to have diverse and equally representative enough data for training and validation. The validation subset also helps us to spot and avoid to reach some potential overfitting when training the neural network.
+As already mentioned, I used the dataset that was already present in the Udacity workspace that was splitted into 87% training, 10% validation and 3% testing from 99 .tfrecords. The fact that the files have been randomly suffled and the proportion of the splits give us confidence to have diverse and equally representative enough data for training and validation. The validation subset also helps us to spot and eventually avoid an overfitting stage when training the neural network.
 
 ### Training
 #### Reference experiment
 The configuration file of my reference experiment is located in the folder `experiments/ref`. I used the default horizontal flip and random crop image data augmentations, and as a learning rate base I set 0.03 with a warmup lr of 0.01
-The network was trained for 3000 steps. The orange curve Loss/total_loss  and the blue dots in the different charts of Detection_Boxes_Precision/Recall are important metrics to find out how well the network was trained and its ability to yield good predictions. It seems the validation loss (blue dot) with value 6.3 at step 2k is slightly bigger than the training loss 6.522 also at 2k. This is an early indication of overfitting, and encourages us to try new ideas for better results than the baseline.
+The network was trained for 3000 steps. The orange curve Loss/total_loss and the blue dots in the different charts of Detection_Boxes_Precision/Recall are important metrics to find out how well the network was trained and its ability to yield good predictions. It seems the validation loss (blue dot) with value 6.3 at step 2k is slightly bigger than the training loss 6.522 also at 2k. This is an early indication of overfitting, and encourages us to try new ideas for better results than the baseline.
 ![](figures/ref_loss.png)
 ![](figures/ref_precision.png)
 ![](figures/ref_recall.png)
@@ -226,7 +226,7 @@ The configuration file of 'experiment1' is located in the folder `experiments/ex
 
 This time I changed also the learning rate base and warmup lr to be 2 orders of magnitude lower than before for a more optimal convergence of the loss function, 3e-4 and 1e-4 respectively (vs 3e-2 and 1e-2 as in the reference trial). The network was also trained for 3000 steps.
 
-In the plot of the loss it is very clear that in the red curve (exp1) is always lower than the orange curve (ref). The light blue dot loss (exp1) at step 2k is also lower than the dark blue dot (ref). This means that in this new experiment the network was doing much better against the training data, and was generalizing better as well in the validation set as compared to the case of the reference baseline.
+In the plot of the loss it is very clear that the red curve (exp1) is always lower than the orange curve (ref). The light blue dot loss (exp1) at step 2k is also lower than the dark blue dot (ref). This means that in this new experiment the network was doing much better against the training data, and was generalizing better as well in the validation set as compared to the case of the reference baseline.
 
 ![](figures/exp1vsref_loss.png)
 
@@ -237,7 +237,6 @@ In the charts regarding precision and recall we can see that the light blue dot 
 
 
 ### Inference demo samples
-Coming soon....
 ![](gifs/animation.gif)
 ![](gifs/animation2.gif)
 ![](gifs/animation3.gif)
